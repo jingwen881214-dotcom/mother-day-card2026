@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>母親節賀卡製作工具</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 核心庫 -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入 Babel 用於解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- 引入 Lucide 圖示庫 -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+        // 模擬 Lucide React 圖示組件
+        const Heart = ({ size = 24, className = "" }) => <i data-lucide="heart" style={{width: size, height: size}} className={className}></i>;
+        const Camera = ({ size = 24 }) => <i data-lucide="camera" style={{width: size, height: size}}></i>;
+        const Download = ({ size = 24 }) => <i data-lucide="download" style={{width: size, height: size}}></i>;
+        const Upload = ({ size = 24, className = "" }) => <i data-lucide="upload" style={{width: size, height: size}} className={className}></i>;
+        const ImageIcon = ({ size = 24 }) => <i data-lucide="image" style={{width: size, height: size}}></i>;
+        const RefreshCw = ({ size = 24 }) => <i data-lucide="refresh-cw" style={{width: size, height: size}}></i>;
+        const Sparkles = ({ size = 24, className = "" }) => <i data-lucide="sparkles" style={{width: size, height: size}} className={className}></i>;
+
+        function App() {
+            const [selectedImage, setSelectedImage] = useState(null);
+            const [frameIndex, setFrameIndex] = useState(0);
+            const [text, setText] = useState("母親節快樂");
+            const canvasRef = useRef(null);
+            const fileInputRef = useRef(null);
+
+            const frames = [
+                { id: 'symmetrical-watercolor', name: '瑰麗花語 (水彩風)', primaryColor: '#FFFFFF', borderColor: '#8B5E3C', accentColor: '#991B1B', description: '對稱水彩玫瑰花簇與優雅細線設計' },
+                { id: 'sunflower-garden', name: '向日葵之歌 (米色風)', primaryColor: '#F5F2E9', borderColor: '#8B5E3C', accentColor: '#4A5D23', description: '橢圓形相框與復古向日葵插畫' },
+                { id: 'modern-floral-pink', name: '溫馨花語 (插畫風)', primaryColor: '#FFEDF1', borderColor: '#633A34', accentColor: '#E11D48', description: '現代插畫風格，底部佈滿多彩鮮花' },
+                { id: 'watercolor-daisy', name: '純淨花語 (水彩風)', primaryColor: '#F0F7FF', borderColor: '#4A5568', accentColor: '#3182CE', description: '清新水彩雛菊與金黃含羞草裝飾' }
+            ];
+
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => setSelectedImage(event.target.result);
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const drawCard = () => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                const frame = frames[frameIndex];
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = frame.primaryColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const renderUI = (img = null) => {
+                    let padding = 150; let yOffset = 200;
+                    if (frameIndex === 0) { padding = 220; yOffset = 300; }
+                    
+                    if (img) {
+                        const availableWidth = canvas.width - padding * 2;
+                        const availableHeight = canvas.height - 550;
+                        const scale = Math.min(availableWidth / img.width, availableHeight / img.height);
+                        const w = img.width * scale; const h = img.height * scale;
+                        const x = (canvas.width - w) / 2; const y = frameIndex === 1 ? 250 : yOffset;
+                        ctx.save();
+                        if (frameIndex === 1) {
+                            ctx.beginPath(); ctx.ellipse(canvas.width / 2, y + 200, 320, 220, 0, 0, Math.PI * 2); ctx.clip();
+                        } else {
+                            ctx.shadowColor = 'rgba(0,0,0,0.05)'; ctx.shadowBlur = 20; ctx.fillStyle = 'white';
+                            ctx.fillRect(x - 5, y - 5, w + 10, h + 10); ctx.shadowBlur = 0;
+                        }
+                        ctx.drawImage(img, x, y, w, h);
+                        ctx.restore();
+                    }
+                    drawDecor(ctx, canvas, frameIndex);
+                };
+
+                if (selectedImage) {
+                    const img = new Image();
+                    img.src = selectedImage;
+                    img.onload = () => renderUI(img);
+                } else {
+                    renderUI();
+                }
+            };
+
+            const drawDecor = (ctx, canvas, idx) => {
+                const frame = frames[idx];
+                ctx.textAlign = 'center';
+                if (idx === 0) {
+                    // 對稱水彩繪製簡化邏輯...
+                    ctx.strokeStyle = '#D1B0A0'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(100, 260); ctx.lineTo(canvas.width - 100, 260); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(100, canvas.height - 280); ctx.lineTo(canvas.width - 100, canvas.height - 280); ctx.stroke();
+                    
+                    ctx.fillStyle = '#633A34'; ctx.font = '28px Georgia'; ctx.fillText("To the best mom ever", canvas.width / 2, canvas.height - 230);
+                    ctx.fillStyle = '#991B1B'; ctx.font = 'bold 76px Georgia'; ctx.fillText("HAPPY MOTHER'S DAY", canvas.width / 2, canvas.height - 140);
+                    ctx.fillStyle = '#451A03'; ctx.font = 'bold 48px sans-serif'; ctx.fillText(text, canvas.width / 2, canvas.height - 70);
+                } else if (idx === 1) {
+                    ctx.fillStyle = '#4A5D23'; ctx.font = 'bold 44px sans-serif'; ctx.fillText("母親節快樂", canvas.width / 2, 180);
+                    ctx.font = 'bold 56px sans-serif'; ctx.fillText(text, canvas.width / 2, canvas.height - 200);
+                } else if (idx === 2) {
+                    ctx.fillStyle = '#633A34'; ctx.font = '24px Arial'; ctx.fillText("HAPPY", canvas.width / 2, canvas.height - 240);
+                    ctx.font = 'italic bold 72px Georgia'; ctx.fillText("Mother's Day", canvas.width / 2, canvas.height - 160);
+                    ctx.font = 'bold 42px sans-serif'; ctx.fillText(text, canvas.width / 2, canvas.height - 80);
+                } else {
+                    ctx.fillStyle = '#718096'; ctx.font = 'italic 82px Georgia'; ctx.fillText("Thank You", canvas.width / 2, 150);
+                    ctx.fillStyle = '#2D3748'; ctx.font = 'bold 54px sans-serif'; ctx.fillText(text, canvas.width / 2, canvas.height - 100);
+                }
+            };
+
+            useEffect(() => {
+                drawCard();
+                setTimeout(() => lucide.createIcons(), 100);
+            }, [selectedImage, frameIndex, text]);
+
+            return (
+                <div className="min-h-screen bg-stone-50 flex flex-col items-center py-6 px-4">
+                    <header className="mb-6 text-center">
+                        <h1 className="text-3xl font-black text-rose-600 flex items-center gap-2">母親節賀卡製作</h1>
+                    </header>
+                    <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div className="bg-white p-6 rounded-3xl shadow-lg space-y-6">
+                            <div onClick={() => fileInputRef.current.click()} className="border-2 border-dashed border-slate-200 rounded-2xl p-8 flex flex-col items-center cursor-pointer hover:bg-rose-50">
+                                <Upload size={48} className="text-slate-300" />
+                                <p className="mt-2 text-slate-500">點擊上傳合照</p>
+                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {frames.map((f, i) => (
+                                    <button key={i} onClick={() => setFrameIndex(i)} className={`p-3 text-left border-2 rounded-xl text-sm ${frameIndex === i ? 'border-rose-500 bg-rose-50' : 'border-slate-100'}`}>
+                                        <strong>{f.name}</strong>
+                                    </button>
+                                ))}
+                            </div>
+                            <input type="text" value={text} onChange={(e) => setText(e.target.value)} className="w-full p-4 border rounded-xl" />
+                            <button onClick={() => {
+                                const link = document.createElement('a');
+                                link.download = 'MotherDayCard.png';
+                                link.href = canvasRef.current.toDataURL();
+                                link.click();
+                            }} className="w-full py-4 bg-rose-600 text-white rounded-xl font-bold">下載成品</button>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="bg-white p-2 rounded-3xl shadow-xl overflow-hidden w-full max-w-[400px]">
+                                <canvas ref={canvasRef} width={800} height={1000} className="w-full h-auto" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
